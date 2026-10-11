@@ -1,3 +1,4 @@
+// https://leetcode.com/problems/k-divisible-elements-subarrays/
 object Solution {
   def countDistinct(nums: Array[Int], k: Int, p: Int): Int = {
     val distinctSubarrays = scala.collection.mutable.Set[List[Int]]()
