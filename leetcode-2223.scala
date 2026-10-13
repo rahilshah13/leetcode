@@ -1,7 +1,10 @@
 /*
     https://leetcode.com/problems/sum-of-scores-of-built-strings/$0
     The Z-algorithm computes the longest common prefix between the string and each suffix in O(n) time.
-    https://www.geeksforgeeks.org/dsa/z-algorithm-linear-time-pattern-searching-algorithm/$0
+    https://www.geeksforgeeks.org/dsa/z-algorithm-linear-time-pattern-searching-algorithm
+
+    The Z-algorithm computes an array where each element represents the length of the longest substring starting at that index that matches a prefix of the string. 
+    By maintaining a sliding window of the rightmost matched prefix.
 */
 object Solution {
     def sumScores(s: String): Long = {
