@@ -1,4 +1,6 @@
 /*
+.bsp/*
+.scala-build/*
 !*.scala
 !.gitignore
 !README.md
