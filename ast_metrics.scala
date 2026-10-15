@@ -25,7 +25,6 @@ object AstAnalyzer {
       val content = Files.readString(path)
       val lines = content.split("\n").toList
 
-      // Heuristic parsing metrics based on syntax tokens
       var maxD = 0
       var currentDepth = 0
       var whileC = 0
@@ -36,15 +35,12 @@ object AstAnalyzer {
       lines.foreach { line =>
         val trimmed = line.trim
         if (trimmed.nonEmpty && !trimmed.startsWith("//")) {
-          // Approximate node/token weight
           tokenCount += trimmed.split("\\s+").length
 
-          // Count constructs
           if (trimmed.startsWith("while") || trimmed.contains(" while ")) whileC += 1
           if (trimmed.startsWith("if") || trimmed.contains(" if ")) ifC += 1
           if (trimmed.startsWith("val ") || trimmed.contains(" val ")) valDefC += 1
 
-          // Track scope depth via braces
           trimmed.foreach {
             case '{' => 
               currentDepth += 1
@@ -56,7 +52,6 @@ object AstAnalyzer {
         }
       }
 
-      // Fallback node count estimation if braces are sparse
       val estimatedNodes = math.max(tokenCount * 2, 10)
 
       FileMetrics(path.getFileName.toString, estimatedNodes, math.max(maxD, 1), whileC, ifC, valDefC)
@@ -85,22 +80,27 @@ object AstAnalyzer {
     val (vMean, vMin, vMax, vStd) = stats(valDefs)
 
     val report = new StringBuilder
-    report.append("=== LEETCODE SCALA AST METRICS REPORT ===\n\n")
-    report.append(f"Total Files Analyzed: ${results.length}%d\n\n")
+    report.append("# LeetCode Scala AST Metrics Report\n\n")
+    report.append("** Files Analyzed:** " + results.length + "\n\n")
 
-    report.append("--- PER-FILE METRICS ---\n")
+    report.append("## Repository Distribution Statistics\n\n")
+    report.append("| Metric | Mean | Min | Max | StdDev |\n")
+    report.append("| :--- | :---: | :---: | :---: | :---: |\n")
+    report.append("| ** Nodes** | " + String.format("%.2f", nMean.asInstanceOf[AnyRef]) + " | " + nMin.toInt + " | " + nMax.toInt + " | " + String.format("%.2f", nStd.asInstanceOf[AnyRef]) + " |\n")
+    report.append("| **Max Depth** | " + String.format("%.2f", dMean.asInstanceOf[AnyRef]) + " | " + dMin.toInt + " | " + dMax.toInt + " | " + String.format("%.2f", dStd.asInstanceOf[AnyRef]) + " |\n")
+    report.append("| **While Loops** | " + String.format("%.2f", wMean.asInstanceOf[AnyRef]) + " | " + wMin.toInt + " | " + wMax.toInt + " | " + String.format("%.2f", wStd.asInstanceOf[AnyRef]) + " |\n")
+    report.append("| **If Branches** | " + String.format("%.2f", iMean.asInstanceOf[AnyRef]) + " | " + iMin.toInt + " | " + iMax.toInt + " | " + String.format("%.2f", iStd.asInstanceOf[AnyRef]) + " |\n")
+    report.append("| **Val Defs** | " + String.format("%.2f", vMean.asInstanceOf[AnyRef]) + " | " + vMin.toInt + " | " + vMax.toInt + " | " + String.format("%.2f", vStd.asInstanceOf[AnyRef]) + " |\n")
+
+    report.append("\n## Per-File Metrics Breakdown\n\n")
+    report.append("| Filename | Nodes | Max Depth | Whiles | Ifs | ValDefs |\n")
+    report.append("| :--- | :---: | :---: | :---: | :---: | :---: |\n")
+    
     results.sortBy(_.filename).foreach { m =>
-      report.append(f"File: ${m.filename}%-20s | Nodes: ${m.nodeCount}%-5d | Max Depth: ${m.maxDepth}%-3d | Whiles: ${m.whileCount}%-2d | Ifs: ${m.ifCount}%-2d | ValDefs: ${m.valDefCount}%-3d\n")
+      report.append("| `" + m.filename + "` | " + m.nodeCount + " | " + m.maxDepth + " | " + m.whileCount + " | " + m.ifCount + " | " + m.valDefCount + " |\n")
     }
 
-    report.append("\n--- DISTRIBUTION STATISTICS ACROSS REPOSITORY ---\n")
-    report.append(f"Total Nodes  -> Mean: $nMean%.2f, Min: $nMin%.0f, Max: $nMax%.0f, StdDev: $nStd%.2f\n")
-    report.append(f"Max Depth    -> Mean: $dMean%.2f, Min: $dMin%.0f, Max: $dMax%.0f, StdDev: $dStd%.2f\n")
-    report.append(f"While Loops  -> Mean: $wMean%.2f, Min: $wMin%.0f, Max: $wMax%.0f, StdDev: $wStd%.2f\n")
-    report.append(f"If Branches  -> Mean: $iMean%.2f, Min: $iMin%.0f, Max: $iMax%.0f, StdDev: $iStd%.2f\n")
-    report.append(f"Val Defs     -> Mean: $vMean%.2f, Min: $vMin%.0f, Max: $vMax%.0f, StdDev: $vStd%.2f\n")
-
-    Files.writeString(Paths.get("ast_metrics_report.txt"), report.toString())
-    println("Successfully generated ast_metrics_report.txt in the current directory.")
+    Files.writeString(Paths.get("README.md"), report.toString())
+    println("Successfully generated formatted README.md in the current directory.")
   }
 }
