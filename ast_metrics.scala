@@ -80,9 +80,10 @@ object AstAnalyzer {
     val (vMean, vMin, vMax, vStd) = stats(valDefs)
 
     val report = new StringBuilder
-    report.append("# Scala AST Metrics\n\n")
+    report.append("#  Scala AST Metrics\n\n")
     report.append("** Files:** " + results.length + "\n\n")
 
+    report.append("## Statistics\n\n")
     report.append("| Metric | Mean | Min | Max | StdDev |\n")
     report.append("| :--- | :---: | :---: | :---: | :---: |\n")
     report.append("| **Nodes** | " + String.format("%.2f", nMean.asInstanceOf[AnyRef]) + " | " + nMin.toInt + " | " + nMax.toInt + " | " + String.format("%.2f", nStd.asInstanceOf[AnyRef]) + " |\n")
@@ -91,6 +92,7 @@ object AstAnalyzer {
     report.append("| **If Branches** | " + String.format("%.2f", iMean.asInstanceOf[AnyRef]) + " | " + iMin.toInt + " | " + iMax.toInt + " | " + String.format("%.2f", iStd.asInstanceOf[AnyRef]) + " |\n")
     report.append("| **Val Defs** | " + String.format("%.2f", vMean.asInstanceOf[AnyRef]) + " | " + vMin.toInt + " | " + vMax.toInt + " | " + String.format("%.2f", vStd.asInstanceOf[AnyRef]) + " |\n")
 
+    report.append("\n## Per-File Metrics\n\n")
     report.append("| Filename | Nodes | Depth | Whiles | Ifs | ValDefs |\n")
     report.append("| :--- | :---: | :---: | :---: | :---: | :---: |\n")
     

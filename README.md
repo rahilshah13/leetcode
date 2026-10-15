@@ -1,6 +1,8 @@
-# Scala AST Metrics
+#  Scala AST Metrics
 
 ** Files:** 15
+
+## Statistics
 
 | Metric | Mean | Min | Max | StdDev |
 | :--- | :---: | :---: | :---: | :---: |
@@ -9,6 +11,9 @@
 | **While Loops** | 0.80 | 0 | 3 | 0.91 |
 | **If Branches** | 2.93 | 0 | 7 | 2.21 |
 | **Val Defs** | 4.67 | 1 | 10 | 3.18 |
+
+## Per-File Metrics
+
 | Filename | Nodes | Depth | Whiles | Ifs | ValDefs |
 | :--- | :---: | :---: | :---: | :---: | :---: |
 | `leetcode-115.scala` | 154 | 5 | 0 | 2 | 3 |
