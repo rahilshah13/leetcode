@@ -1,7 +1,5 @@
 #  Scala AST Metrics
 
-** Files:** 15
-
 ## Statistics
 
 | Metric | Mean | Min | Max | StdDev |

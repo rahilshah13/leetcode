@@ -81,7 +81,6 @@ object AstAnalyzer {
 
     val report = new StringBuilder
     report.append("#  Scala AST Metrics\n\n")
-    report.append("** Files:** " + results.length + "\n\n")
 
     report.append("## Statistics\n\n")
     report.append("| Metric | Mean | Min | Max | StdDev |\n")

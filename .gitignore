@@ -1,12 +1,4 @@
-# Scala CLI & Bloop Build Artifacts
-.scala-build/
-.bsp/
-.metals/
-project/
-target/
-*.txt
-.idea/
-*.iml
-.vscode/
-.DS_Store
-Thumbs.db
+/*
+!*.scala
+!.gitignore
+!README.md
