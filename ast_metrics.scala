@@ -80,19 +80,19 @@ object AstAnalyzer {
     val (vMean, vMin, vMax, vStd) = stats(valDefs)
 
     val report = new StringBuilder
-    report.append("# LeetCode Scala AST Metrics Report\n\n")
-    report.append("** Files Analyzed:** " + results.length + "\n\n")
+    report.append("# LeetCode Scala AST Metrics\n\n")
+    report.append("** Files:** " + results.length + "\n\n")
 
-    report.append("## Repository Distribution Statistics\n\n")
+    report.append("## Repository Statistics\n\n")
     report.append("| Metric | Mean | Min | Max | StdDev |\n")
     report.append("| :--- | :---: | :---: | :---: | :---: |\n")
-    report.append("| ** Nodes** | " + String.format("%.2f", nMean.asInstanceOf[AnyRef]) + " | " + nMin.toInt + " | " + nMax.toInt + " | " + String.format("%.2f", nStd.asInstanceOf[AnyRef]) + " |\n")
-    report.append("| **Max Depth** | " + String.format("%.2f", dMean.asInstanceOf[AnyRef]) + " | " + dMin.toInt + " | " + dMax.toInt + " | " + String.format("%.2f", dStd.asInstanceOf[AnyRef]) + " |\n")
+    report.append("| **Nodes** | " + String.format("%.2f", nMean.asInstanceOf[AnyRef]) + " | " + nMin.toInt + " | " + nMax.toInt + " | " + String.format("%.2f", nStd.asInstanceOf[AnyRef]) + " |\n")
+    report.append("| **Depth** | " + String.format("%.2f", dMean.asInstanceOf[AnyRef]) + " | " + dMin.toInt + " | " + dMax.toInt + " | " + String.format("%.2f", dStd.asInstanceOf[AnyRef]) + " |\n")
     report.append("| **While Loops** | " + String.format("%.2f", wMean.asInstanceOf[AnyRef]) + " | " + wMin.toInt + " | " + wMax.toInt + " | " + String.format("%.2f", wStd.asInstanceOf[AnyRef]) + " |\n")
     report.append("| **If Branches** | " + String.format("%.2f", iMean.asInstanceOf[AnyRef]) + " | " + iMin.toInt + " | " + iMax.toInt + " | " + String.format("%.2f", iStd.asInstanceOf[AnyRef]) + " |\n")
     report.append("| **Val Defs** | " + String.format("%.2f", vMean.asInstanceOf[AnyRef]) + " | " + vMin.toInt + " | " + vMax.toInt + " | " + String.format("%.2f", vStd.asInstanceOf[AnyRef]) + " |\n")
 
-    report.append("\n## Per-File Metrics Breakdown\n\n")
+    report.append("\n## Per-File Metrics \n\n")
     report.append("| Filename | Nodes | Max Depth | Whiles | Ifs | ValDefs |\n")
     report.append("| :--- | :---: | :---: | :---: | :---: | :---: |\n")
     

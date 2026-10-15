@@ -1,18 +1,18 @@
-# LeetCode Scala AST Metrics Report
+# LeetCode Scala AST Metrics
 
-**Total Files Analyzed:** 15
+** Files:** 15
 
-## Repository Distribution Statistics
+## Repository Statistics
 
 | Metric | Mean | Min | Max | StdDev |
 | :--- | :---: | :---: | :---: | :---: |
-| **Total Nodes** | 252.27 | 124 | 456 | 99.80 |
-| **Max Depth** | 4.40 | 3 | 6 | 0.80 |
+| **Nodes** | 252.27 | 124 | 456 | 99.80 |
+| **Depth** | 4.40 | 3 | 6 | 0.80 |
 | **While Loops** | 0.80 | 0 | 3 | 0.91 |
 | **If Branches** | 2.93 | 0 | 7 | 2.21 |
 | **Val Defs** | 4.67 | 1 | 10 | 3.18 |
 
-## Per-File Metrics Breakdown
+## Per-File Metrics 
 
 | Filename | Nodes | Max Depth | Whiles | Ifs | ValDefs |
 | :--- | :---: | :---: | :---: | :---: | :---: |
