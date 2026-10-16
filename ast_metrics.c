@@ -1,3 +1,9 @@
+/*
+gcc -O3 ast_metrics.c -o ast_metrics \
+  -I$(brew --prefix llvm)/include \
+  -L$(brew --prefix llvm)/lib \
+  -lclang -lm
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -39,7 +45,7 @@ typedef struct {
     int switch_count;
 } ASTVisitorContext;
 
-CXChildVisitResult ast_visitor(CXCursor cursor, CXCursor parent, CXClientData client_data) {
+enum CXChildVisitResult ast_visitor(CXCursor cursor, CXCursor parent, CXClientData client_data) {
     ASTVisitorContext *ctx = (ASTVisitorContext *)client_data;
     ctx->node_count++;
 
@@ -77,7 +83,7 @@ CXChildVisitResult ast_visitor(CXCursor cursor, CXCursor parent, CXClientData cl
         ctx->current_depth--;
     }
 
-    return CXChildVisitResult_Continue;
+    return CXChildVisit_Continue;
 }
 
 int parse_problem_id(const char *filename) {
@@ -104,7 +110,6 @@ const char* get_difficulty(DifficultyEntry *entries, int count, int id) {
 }
 
 int main() {
-    // 1. Fetch LeetCode difficulty CSV via curl
     DifficultyEntry *diff_entries = malloc(MAX_DIFF_ENTRIES * sizeof(DifficultyEntry));
     if (!diff_entries) {
         perror("Failed to allocate memory for difficulty entries");
@@ -145,7 +150,6 @@ int main() {
         pclose(csv_pipe);
     }
 
-    // 2. Read matching C files from current directory
     DIR *dir = opendir(".");
     if (!dir) {
         perror("Error reading current directory");
@@ -180,7 +184,6 @@ int main() {
 
     qsort(results, result_count, sizeof(FileMetrics), compare_files);
 
-    // 3. Parse AST for each C file using libclang
     CXIndex index = clang_createIndex(0, 0);
 
     for (int i = 0; i < result_count; i++) {
@@ -220,7 +223,6 @@ int main() {
 
     clang_disposeIndex(index);
 
-    // 4. Statistical computations (means)
     double nodes_sum = 0, depth_sum = 0, loop_sum = 0, if_sum = 0, const_sum = 0, var_sum = 0, switch_sum = 0;
     int n = result_count;
 
@@ -244,7 +246,6 @@ int main() {
     double vrMean = n > 0 ? var_sum / n : 0;
     double mMean = n > 0 ? switch_sum / n : 0;
 
-    // 5. Generate Markdown Report
     FILE *readme = fopen("README_c.md", "w");
     if (!readme) {
         perror("Failed to write README_c.md");

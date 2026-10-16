@@ -3,6 +3,8 @@
 .scala-build/*
 !*.scala
 !*.go
+!*.c
 !.gitignore
 !README.md
 !README_go.md
+!README_c.md
