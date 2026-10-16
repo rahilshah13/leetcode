@@ -2,11 +2,35 @@
 //> using dep org.scalameta::scalameta:4.17.4
 
 import java.nio.file.{Files, Paths}
+import java.net.URL
 import scala.jdk.CollectionConverters._
 import scala.meta._
 
 object AstAnalyzer {
   def main(args: Array[String]): Unit = {
+    // 1. Fetch and robustly parse the LeetCode question difficulty CSV mapping
+    val difficultyMap: Map[Int, String] = try {
+      val gistCsvUrl = "https://gist.githubusercontent.com/nzxwang/2b384550024ce86c4c9855a7f8811df4/raw/9d8619439bb1dc58697a04c8bbb703e2b1bfd189/all-leetcode-questions.csv"
+      val csvContent = scala.io.Source.fromURL(new URL(gistCsvUrl)).getLines().toList
+      
+      csvContent.flatMap { line =>
+        val trimmed = line.trim
+        if (trimmed.nonEmpty && !trimmed.startsWith("#")) {
+          // Robustly split by whitespace or commas to handle columns correctly
+          val parts = trimmed.split("[,\\s]+")
+          if (parts.length >= 2) {
+            parts(0).toIntOption.map { problemNum =>
+              problemNum -> parts.last
+            }
+          } else None
+        } else None
+      }.toMap
+    } catch {
+      case e: Exception =>
+        println("Warning: Could not fetch difficulty CSV (" + e.getMessage + "). Marking difficulties as 'Unknown'.")
+        Map.empty[Int, String]
+    }
+
     val dir = Paths.get(".")
     val files = Files.list(dir)
       .iterator()
@@ -22,11 +46,16 @@ object AstAnalyzer {
       ifCount: Int, 
       valDefCount: Int,
       varDefCount: Int,
-      matchCount: Int
+      matchCount: Int,
+      difficulty: String
     )
 
     val results = files.flatMap { path =>
       val content = Files.readString(path)
+      val fileNameStr = path.getFileName.toString
+
+      val problemIdOpt = fileNameStr.stripPrefix("leetcode-").stripSuffix(".scala").toIntOption
+      val difficulty = problemIdOpt.flatMap(difficultyMap.get).getOrElse("Unknown")
       
       content.parse[Source] match {
         case Parsed.Success(tree) =>
@@ -62,18 +91,19 @@ object AstAnalyzer {
           val maxD = math.max(calcDepth(tree), 1)
 
           Some(FileMetrics(
-            path.getFileName.toString, 
+            fileNameStr, 
             nodeC, 
             maxD, 
             whileC, 
             ifC, 
             valDefC, 
             varDefC, 
-            matchC
+            matchC,
+            difficulty
           ))
 
         case Parsed.Error(pos, message, _) =>
-          System.err.println("Failed to parse " + path.getFileName + " at line " + pos.startLine + ": " + message)
+          System.err.println("Failed to parse " + fileNameStr + " at line " + pos.startLine + ": " + message)
           None
       }
     }
@@ -105,7 +135,7 @@ object AstAnalyzer {
     val (mMean, mMin, mMax, mStd) = stats(matches)
 
     val report = new StringBuilder
-    report.append("# Scala AST Metrics\n\n")
+    report.append("# Scala AST Metrics (Sound Analysis)\n\n")
 
     report.append("## Statistics\n\n")
     report.append("| Metric | Mean | Min | Max | StdDev |\n")
@@ -119,14 +149,14 @@ object AstAnalyzer {
     report.append("| **Match Exprs** | " + String.format("%.2f", mMean.asInstanceOf[AnyRef]) + " | " + mMin.toInt + " | " + mMax.toInt + " | " + String.format("%.2f", mStd.asInstanceOf[AnyRef]) + " |\n")
 
     report.append("\n## Per-File Metrics\n\n")
-    report.append("| Filename | Nodes | Depth | Whiles | Ifs | ValDefs | VarDefs | Matches |\n")
-    report.append("| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |\n")
+    report.append("| Filename | Difficulty | Nodes | Depth | Whiles | Ifs | ValDefs | VarDefs | Matches |\n")
+    report.append("| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |\n")
     
     results.sortBy(_.filename).foreach { m =>
-      report.append("| `" + m.filename + "` | " + m.nodeCount + " | " + m.maxDepth + " | " + m.whileCount + " | " + m.ifCount + " | " + m.valDefCount + " | " + m.varDefCount + " | " + m.matchCount + " |\n")
+      report.append("| `" + m.filename + "` | **" + m.difficulty + "** | " + m.nodeCount + " | " + m.maxDepth + " | " + m.whileCount + " | " + m.ifCount + " | " + m.valDefCount + " | " + m.varDefCount + " | " + m.matchCount + " |\n")
     }
 
     Files.writeString(Paths.get("README.md"), report.toString())
-    println("Successfully generated sound AST-backed README.md in the current directory.")
+    println("Generated AST-backed README.md with LeetCode difficulties in the current directory.")
   }
 }
