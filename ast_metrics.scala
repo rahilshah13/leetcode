@@ -16,7 +16,6 @@ object AstAnalyzer {
       csvContent.flatMap { line =>
         val trimmed = line.trim
         if (trimmed.nonEmpty && !trimmed.startsWith("#")) {
-          // Robustly split by whitespace or commas to handle columns correctly
           val parts = trimmed.split("[,\\s]+")
           if (parts.length >= 2) {
             parts(0).toIntOption.map { problemNum =>
@@ -32,11 +31,20 @@ object AstAnalyzer {
     }
 
     val dir = Paths.get(".")
+    
+    // 2. Find matching files, convert to List first, then sort numerically by problem ID
     val files = Files.list(dir)
       .iterator()
       .asScala
       .filter(p => p.toString.endsWith(".scala") && p.getFileName.toString.startsWith("leetcode-"))
       .toList
+      .sortBy { p =>
+        p.getFileName.toString
+          .stripPrefix("leetcode-")
+          .stripSuffix(".scala")
+          .toIntOption
+          .getOrElse(Int.MaxValue)
+      }
 
     case class FileMetrics(
       filename: String, 
@@ -135,7 +143,7 @@ object AstAnalyzer {
     val (mMean, mMin, mMax, mStd) = stats(matches)
 
     val report = new StringBuilder
-    report.append("# Scala AST Metrics \n\n")
+    report.append("# Scala AST Metrics\n\n")
 
     report.append("## Statistics\n\n")
     report.append("| Metric | Mean | Min | Max | StdDev |\n")
@@ -152,11 +160,12 @@ object AstAnalyzer {
     report.append("| Filename | Difficulty | Nodes | Depth | Whiles | Ifs | ValDefs | VarDefs | Matches |\n")
     report.append("| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |\n")
     
-    results.sortBy(_.filename).foreach { m =>
+    // 3. Output results preserving the numerical sort order
+    results.foreach { m =>
       report.append("| `" + m.filename + "` | **" + m.difficulty + "** | " + m.nodeCount + " | " + m.maxDepth + " | " + m.whileCount + " | " + m.ifCount + " | " + m.valDefCount + " | " + m.varDefCount + " | " + m.matchCount + " |\n")
     }
 
     Files.writeString(Paths.get("README.md"), report.toString())
-    println("Generated AST-backed README.md with LeetCode difficulties in the current directory.")
+    println("Generated AST-backed README.md sorted by problem number in the current directory.")
   }
 }
