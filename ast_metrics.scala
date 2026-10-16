@@ -135,7 +135,7 @@ object AstAnalyzer {
     val (mMean, mMin, mMax, mStd) = stats(matches)
 
     val report = new StringBuilder
-    report.append("# Scala AST Metrics (Sound Analysis)\n\n")
+    report.append("# Scala AST Metrics \n\n")
 
     report.append("## Statistics\n\n")
     report.append("| Metric | Mean | Min | Max | StdDev |\n")

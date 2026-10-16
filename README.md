@@ -1,4 +1,4 @@
-# Scala AST Metrics (Sound Analysis)
+# Scala AST Metrics 
 
 ## Statistics
 
