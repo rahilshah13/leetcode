@@ -1,3 +1,4 @@
+package main
 func minWindow(s string, t string) string {
     if len(s) < len(t) {
         return ""
