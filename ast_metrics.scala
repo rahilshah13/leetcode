@@ -50,7 +50,7 @@ object AstAnalyzer {
       filename: String, 
       nodeCount: Int, 
       maxDepth: Int, 
-      whileCount: Int, 
+      loopCount: Int, 
       ifCount: Int, 
       valDefCount: Int,
       varDefCount: Int,
@@ -68,7 +68,7 @@ object AstAnalyzer {
       content.parse[Source] match {
         case Parsed.Success(tree) =>
           var nodeC = 0
-          var whileC = 0
+          var loopC = 0
           var ifC = 0
           var valDefC = 0
           var varDefC = 0
@@ -79,17 +79,20 @@ object AstAnalyzer {
           }
 
           tree.traverse {
-            case _: Term.While => whileC += 1
-            case _: Term.If => ifC += 1
-            case _: Defn.Val => valDefC += 1
-            case _: Defn.Var => varDefC += 1
-            case _: Term.Match => matchC += 1
-            case _ =>
+            case _: Term.For      => loopC += 1
+            case _: Term.ForYield => loopC += 1
+            case _: Term.While    => loopC += 1
+            case _: Term.Do       => loopC += 1
+            case _: Term.If       => ifC += 1
+            case _: Defn.Val      => valDefC += 1
+            case _: Defn.Var      => varDefC += 1
+            case _: Term.Match    => matchC += 1
+            case _                =>
           }
 
           def calcDepth(t: Tree, current: Int = 0): Int = {
             val nextDepth = t match {
-              case _: Term.Block | _: Template | _: Term.If | _: Term.While | _: Term.Match => current + 1
+              case _: Term.Block | _: Template | _: Term.If | _: Term.While | _: Term.Do | _: Term.For | _: Term.ForYield | _: Term.Match => current + 1
               case _ => current
             }
             val childDepths = t.children.map(c => calcDepth(c, nextDepth))
@@ -102,7 +105,7 @@ object AstAnalyzer {
             fileNameStr, 
             nodeC, 
             maxD, 
-            whileC, 
+            loopC, 
             ifC, 
             valDefC, 
             varDefC, 
@@ -128,7 +131,7 @@ object AstAnalyzer {
 
     val nodeCounts = results.map(_.nodeCount.toDouble)
     val depths = results.map(_.maxDepth.toDouble)
-    val whiles = results.map(_.whileCount.toDouble)
+    val loops = results.map(_.loopCount.toDouble)
     val ifs = results.map(_.ifCount.toDouble)
     val valDefs = results.map(_.valDefCount.toDouble)
     val varDefs = results.map(_.varDefCount.toDouble)
@@ -136,7 +139,7 @@ object AstAnalyzer {
 
     val (nMean, nMin, nMax, nStd) = stats(nodeCounts)
     val (dMean, dMin, dMax, dStd) = stats(depths)
-    val (wMean, wMin, wMax, wStd) = stats(whiles)
+    val (lMean, lMin, lMax, lStd) = stats(loops)
     val (iMean, iMin, iMax, iStd) = stats(ifs)
     val (vMean, vMin, vMax, vStd) = stats(valDefs)
     val (vrMean, vrMin, vrMax, vrStd) = stats(varDefs)
@@ -150,19 +153,19 @@ object AstAnalyzer {
     report.append("| :--- | :---: | :---: | :---: | :---: |\n")
     report.append("| **Nodes** | " + String.format("%.2f", nMean.asInstanceOf[AnyRef]) + " | " + nMin.toInt + " | " + nMax.toInt + " | " + String.format("%.2f", nStd.asInstanceOf[AnyRef]) + " |\n")
     report.append("| **Depth** | " + String.format("%.2f", dMean.asInstanceOf[AnyRef]) + " | " + dMin.toInt + " | " + dMax.toInt + " | " + String.format("%.2f", dStd.asInstanceOf[AnyRef]) + " |\n")
-    report.append("| **While Loops** | " + String.format("%.2f", wMean.asInstanceOf[AnyRef]) + " | " + wMin.toInt + " | " + wMax.toInt + " | " + String.format("%.2f", wStd.asInstanceOf[AnyRef]) + " |\n")
+    report.append("| **Loops** | " + String.format("%.2f", lMean.asInstanceOf[AnyRef]) + " | " + lMin.toInt + " | " + lMax.toInt + " | " + String.format("%.2f", lStd.asInstanceOf[AnyRef]) + " |\n")
     report.append("| **If Branches** | " + String.format("%.2f", iMean.asInstanceOf[AnyRef]) + " | " + iMin.toInt + " | " + iMax.toInt + " | " + String.format("%.2f", iStd.asInstanceOf[AnyRef]) + " |\n")
     report.append("| **Val Defs** | " + String.format("%.2f", vMean.asInstanceOf[AnyRef]) + " | " + vMin.toInt + " | " + vMax.toInt + " | " + String.format("%.2f", vStd.asInstanceOf[AnyRef]) + " |\n")
     report.append("| **Var Defs** | " + String.format("%.2f", vrMean.asInstanceOf[AnyRef]) + " | " + vrMin.toInt + " | " + vrMax.toInt + " | " + String.format("%.2f", vrStd.asInstanceOf[AnyRef]) + " |\n")
     report.append("| **Match Exprs** | " + String.format("%.2f", mMean.asInstanceOf[AnyRef]) + " | " + mMin.toInt + " | " + mMax.toInt + " | " + String.format("%.2f", mStd.asInstanceOf[AnyRef]) + " |\n")
 
     report.append("\n## Per-File Metrics\n\n")
-    report.append("| Filename | Difficulty | Nodes | Depth | Whiles | Ifs | ValDefs | VarDefs | Matches |\n")
+    report.append("| Filename | Difficulty | Nodes | Depth | Loops | Ifs | ValDefs | VarDefs | Matches |\n")
     report.append("| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |\n")
     
     // 3. Output results preserving the numerical sort order
     results.foreach { m =>
-      report.append("| `" + m.filename + "` | **" + m.difficulty + "** | " + m.nodeCount + " | " + m.maxDepth + " | " + m.whileCount + " | " + m.ifCount + " | " + m.valDefCount + " | " + m.varDefCount + " | " + m.matchCount + " |\n")
+      report.append("| `" + m.filename + "` | **" + m.difficulty + "** | " + m.nodeCount + " | " + m.maxDepth + " | " + m.loopCount + " | " + m.ifCount + " | " + m.valDefCount + " | " + m.varDefCount + " | " + m.matchCount + " |\n")
     }
 
     Files.writeString(Paths.get("README.md"), report.toString())
