@@ -28,7 +28,6 @@ object AstAnalyzer {
     val results = files.flatMap { path =>
       val content = Files.readString(path)
       
-      // Parse the source file into a sound Scalameta AST
       content.parse[Source] match {
         case Parsed.Success(tree) =>
           var nodeC = 0
@@ -38,12 +37,10 @@ object AstAnalyzer {
           var varDefC = 0
           var matchC = 0
 
-          // 1. Traverse every single AST node accurately
           tree.traverse {
             case _: Tree => nodeC += 1
           }
 
-          // 2. Count specific syntactic structures safely
           tree.traverse {
             case _: Term.While => whileC += 1
             case _: Term.If => ifC += 1
@@ -53,7 +50,6 @@ object AstAnalyzer {
             case _ =>
           }
 
-          // 3. Calculate true hierarchical nesting depth
           def calcDepth(t: Tree, current: Int = 0): Int = {
             val nextDepth = t match {
               case _: Term.Block | _: Template | _: Term.If | _: Term.While | _: Term.Match => current + 1
@@ -76,8 +72,8 @@ object AstAnalyzer {
             matchC
           ))
 
-        case Parsed.Error(error) =>
-          System.err.println(s"Failed to parse ${path.getFileName}:${error.message}")
+        case Parsed.Error(pos, message, _) =>
+          System.err.println("Failed to parse " + path.getFileName + " at line " + pos.startLine + ": " + message)
           None
       }
     }
@@ -109,7 +105,7 @@ object AstAnalyzer {
     val (mMean, mMin, mMax, mStd) = stats(matches)
 
     val report = new StringBuilder
-    report.append("# Scala AST Metrics (Sound Analysis)\n\n")
+    report.append("# Scala AST Metrics\n\n")
 
     report.append("## Statistics\n\n")
     report.append("| Metric | Mean | Min | Max | StdDev |\n")

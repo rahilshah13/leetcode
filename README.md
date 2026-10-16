@@ -1,31 +1,33 @@
-#  Scala AST Metrics
+# Scala AST Metrics
 
 ## Statistics
 
 | Metric | Mean | Min | Max | StdDev |
 | :--- | :---: | :---: | :---: | :---: |
-| **Nodes** | 252.27 | 124 | 456 | 99.80 |
-| **Depth** | 4.40 | 3 | 6 | 0.80 |
+| **Nodes** | 243.13 | 122 | 517 | 119.17 |
+| **Depth** | 6.33 | 3 | 11 | 2.05 |
 | **While Loops** | 0.80 | 0 | 3 | 0.91 |
-| **If Branches** | 2.93 | 0 | 7 | 2.21 |
-| **Val Defs** | 4.67 | 1 | 10 | 3.18 |
+| **If Branches** | 2.87 | 0 | 7 | 2.09 |
+| **Val Defs** | 4.73 | 1 | 10 | 3.15 |
+| **Var Defs** | 2.40 | 0 | 8 | 2.30 |
+| **Match Exprs** | 0.00 | 0 | 0 | 0.00 |
 
 ## Per-File Metrics
 
-| Filename | Nodes | Depth | Whiles | Ifs | ValDefs |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| `leetcode-115.scala` | 154 | 5 | 0 | 2 | 3 |
-| `leetcode-123.scala` | 124 | 3 | 0 | 1 | 1 |
-| `leetcode-1515.scala` | 328 | 5 | 3 | 1 | 10 |
-| `leetcode-1589.scala` | 190 | 3 | 0 | 0 | 6 |
-| `leetcode-2223.scala` | 314 | 4 | 1 | 2 | 2 |
-| `leetcode-2261.scala` | 142 | 5 | 0 | 2 | 2 |
-| `leetcode-239.scala` | 158 | 4 | 1 | 2 | 2 |
-| `leetcode-391.scala` | 308 | 4 | 0 | 2 | 8 |
-| `leetcode-393.scala` | 278 | 5 | 1 | 6 | 1 |
-| `leetcode-407.scala` | 412 | 6 | 1 | 4 | 10 |
-| `leetcode-440.scala` | 226 | 4 | 2 | 1 | 2 |
-| `leetcode-493.scala` | 456 | 4 | 0 | 7 | 9 |
-| `leetcode-76.scala` | 326 | 5 | 2 | 5 | 6 |
-| `leetcode-84.scala` | 148 | 4 | 1 | 2 | 5 |
-| `leetcode-87.scala` | 220 | 5 | 0 | 7 | 3 |
+| Filename | Nodes | Depth | Whiles | Ifs | ValDefs | VarDefs | Matches |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| `leetcode-115.scala` | 143 | 6 | 0 | 2 | 4 | 0 | 0 |
+| `leetcode-123.scala` | 122 | 3 | 0 | 1 | 1 | 4 | 0 |
+| `leetcode-1515.scala` | 331 | 8 | 3 | 1 | 10 | 8 | 0 |
+| `leetcode-1589.scala` | 190 | 3 | 0 | 0 | 6 | 2 | 0 |
+| `leetcode-2223.scala` | 206 | 5 | 1 | 2 | 2 | 3 | 0 |
+| `leetcode-2261.scala` | 137 | 6 | 0 | 2 | 2 | 2 | 0 |
+| `leetcode-239.scala` | 185 | 5 | 1 | 2 | 2 | 1 | 0 |
+| `leetcode-391.scala` | 316 | 5 | 0 | 2 | 8 | 0 | 0 |
+| `leetcode-393.scala` | 153 | 11 | 1 | 6 | 1 | 2 | 0 |
+| `leetcode-407.scala` | 517 | 9 | 1 | 4 | 10 | 1 | 0 |
+| `leetcode-440.scala` | 170 | 6 | 2 | 1 | 2 | 5 | 0 |
+| `leetcode-493.scala` | 475 | 7 | 0 | 7 | 9 | 0 | 0 |
+| `leetcode-76.scala` | 316 | 8 | 2 | 5 | 6 | 6 | 0 |
+| `leetcode-84.scala` | 149 | 6 | 1 | 2 | 5 | 1 | 0 |
+| `leetcode-87.scala` | 237 | 7 | 0 | 6 | 3 | 1 | 0 |
