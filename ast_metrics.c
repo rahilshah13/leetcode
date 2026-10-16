@@ -1,3 +1,4 @@
+// gcc -O3 ast_metrics.c -o ast_metrics -I$(brew --prefix llvm)/include -L$(brew --prefix llvm)/lib -lclang -lm
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
