@@ -2,5 +2,7 @@
 .bsp/*
 .scala-build/*
 !*.scala
+!*.go
 !.gitignore
 !README.md
+!README_go.md
