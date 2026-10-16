@@ -1,9 +1,3 @@
-/*
-gcc -O3 ast_metrics.c -o ast_metrics \
-  -I$(brew --prefix llvm)/include \
-  -L$(brew --prefix llvm)/lib \
-  -lclang -lm
-*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,7 +18,8 @@ typedef struct {
 
 typedef struct {
     char filename[256];
-    int node_count;
+    int total_node_count;
+    int local_node_count;
     int max_depth;
     int loop_count;
     int if_count;
@@ -35,7 +30,8 @@ typedef struct {
 } FileMetrics;
 
 typedef struct {
-    int node_count;
+    int total_node_count;
+    int local_node_count;
     int max_depth;
     int current_depth;
     int loop_count;
@@ -47,40 +43,55 @@ typedef struct {
 
 enum CXChildVisitResult ast_visitor(CXCursor cursor, CXCursor parent, CXClientData client_data) {
     ASTVisitorContext *ctx = (ASTVisitorContext *)client_data;
-    ctx->node_count++;
 
-    enum CXCursorKind kind = clang_getCursorKind(cursor);
+    // Count every node in the entire translation unit
+    ctx->total_node_count++;
 
-    int is_structural = (kind == CXCursor_CompoundStmt || kind == CXCursor_IfStmt || 
-                         kind == CXCursor_ForStmt || kind == CXCursor_WhileStmt || 
-                         kind == CXCursor_DoStmt || kind == CXCursor_SwitchStmt);
+    int is_sys = clang_Location_isInSystemHeader(clang_getCursorLocation(cursor));
 
-    if (is_structural) {
-        ctx->current_depth++;
-        if (ctx->current_depth > ctx->max_depth) {
-            ctx->max_depth = ctx->current_depth;
+    // Only collect metrics and local node count for non-system headers
+    if (!is_sys) {
+        ctx->local_node_count++;
+
+        enum CXCursorKind kind = clang_getCursorKind(cursor);
+
+        int is_structural = (kind == CXCursor_CompoundStmt || kind == CXCursor_IfStmt || 
+                             kind == CXCursor_ForStmt || kind == CXCursor_WhileStmt || 
+                             kind == CXCursor_DoStmt || kind == CXCursor_SwitchStmt);
+
+        if (is_structural) {
+            ctx->current_depth++;
+            if (ctx->current_depth > ctx->max_depth) {
+                ctx->max_depth = ctx->current_depth;
+            }
         }
-    }
 
-    if (kind == CXCursor_ForStmt || kind == CXCursor_WhileStmt || kind == CXCursor_DoStmt) {
-        ctx->loop_count++;
-    } else if (kind == CXCursor_IfStmt) {
-        ctx->if_count++;
-    } else if (kind == CXCursor_SwitchStmt) {
-        ctx->switch_count++;
-    } else if (kind == CXCursor_VarDecl) {
-        CXType type = clang_getCursorType(cursor);
-        if (clang_isConstQualifiedType(type)) {
-            ctx->const_count++;
-        } else {
-            ctx->var_count++;
+        if (kind == CXCursor_ForStmt || kind == CXCursor_WhileStmt || kind == CXCursor_DoStmt) {
+            ctx->loop_count++;
+        } else if (kind == CXCursor_IfStmt) {
+            ctx->if_count++;
+        } else if (kind == CXCursor_SwitchStmt) {
+            ctx->switch_count++;
+        } else if (kind == CXCursor_VarDecl) {
+            CXType type = clang_getCursorType(cursor);
+            if (clang_isConstQualifiedType(type)) {
+                ctx->const_count++;
+            } else {
+                ctx->var_count++;
+            }
         }
     }
 
     clang_visitChildren(cursor, ast_visitor, client_data);
 
-    if (is_structural) {
-        ctx->current_depth--;
+    if (!is_sys) {
+        enum CXCursorKind kind = clang_getCursorKind(cursor);
+        int is_structural = (kind == CXCursor_CompoundStmt || kind == CXCursor_IfStmt || 
+                             kind == CXCursor_ForStmt || kind == CXCursor_WhileStmt || 
+                             kind == CXCursor_DoStmt || kind == CXCursor_SwitchStmt);
+        if (is_structural) {
+            ctx->current_depth--;
+        }
     }
 
     return CXChildVisit_Continue;
@@ -206,11 +217,12 @@ int main() {
         }
 
         CXCursor cursor = clang_getTranslationUnitCursor(tu);
-        ASTVisitorContext ctx = {0, 1, 0, 0, 0, 0, 0, 0};
+        ASTVisitorContext ctx = {0, 0, 1, 0, 0, 0, 0, 0, 0};
 
         clang_visitChildren(cursor, ast_visitor, &ctx);
 
-        results[i].node_count = ctx.node_count > 0 ? ctx.node_count : 1;
+        results[i].total_node_count = ctx.total_node_count > 0 ? ctx.total_node_count : 1;
+        results[i].local_node_count = ctx.local_node_count > 0 ? ctx.local_node_count : 1;
         results[i].max_depth = ctx.max_depth > 0 ? ctx.max_depth : 1;
         results[i].loop_count = ctx.loop_count;
         results[i].if_count = ctx.if_count;
@@ -223,12 +235,13 @@ int main() {
 
     clang_disposeIndex(index);
 
-    double nodes_sum = 0, depth_sum = 0, loop_sum = 0, if_sum = 0, const_sum = 0, var_sum = 0, switch_sum = 0;
+    double total_nodes_sum = 0, local_nodes_sum = 0, depth_sum = 0, loop_sum = 0, if_sum = 0, const_sum = 0, var_sum = 0, switch_sum = 0;
     int n = result_count;
 
     if (n > 0) {
         for (int i = 0; i < n; i++) {
-            nodes_sum += results[i].node_count;
+            total_nodes_sum += results[i].total_node_count;
+            local_nodes_sum += results[i].local_node_count;
             depth_sum += results[i].max_depth;
             loop_sum += results[i].loop_count;
             if_sum += results[i].if_count;
@@ -238,7 +251,8 @@ int main() {
         }
     }
 
-    double nMean = n > 0 ? nodes_sum / n : 0;
+    double totalMean = n > 0 ? total_nodes_sum / n : 0;
+    double localMean = n > 0 ? local_nodes_sum / n : 0;
     double dMean = n > 0 ? depth_sum / n : 0;
     double wMean = n > 0 ? loop_sum / n : 0;
     double iMean = n > 0 ? if_sum / n : 0;
@@ -258,7 +272,8 @@ int main() {
     fprintf(readme, "## Statistics\n\n");
     fprintf(readme, "| Metric | Mean |\n");
     fprintf(readme, "| :--- | :---: |\n");
-    fprintf(readme, "| **AST Nodes** | %.2f |\n", nMean);
+    fprintf(readme, "| **Total AST Nodes** | %.2f |\n", totalMean);
+    fprintf(readme, "| **Local AST Nodes** | %.2f |\n", localMean);
     fprintf(readme, "| **Depth** | %.2f |\n", dMean);
     fprintf(readme, "| **Loops** | %.2f |\n", wMean);
     fprintf(readme, "| **If Branches** | %.2f |\n", iMean);
@@ -267,21 +282,21 @@ int main() {
     fprintf(readme, "| **Switch Exprs** | %.2f |\n", mMean);
 
     fprintf(readme, "\n## Per-File Metrics\n\n");
-    fprintf(readme, "| Filename | Difficulty | Nodes | Depth | Loops | Ifs | ConstDefs | VarDefs | Switches |\n");
-    fprintf(readme, "| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |\n");
+    fprintf(readme, "| Filename | Difficulty | Total Nodes | Local Nodes | Depth | Loops | Ifs | ConstDefs | VarDefs | Switches |\n");
+    fprintf(readme, "| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |\n");
 
     for (int i = 0; i < result_count; i++) {
-        fprintf(readme, "| `%s` | **%s** | %d | %d | %d | %d | %d | %d | %d |\n",
+        fprintf(readme, "| `%s` | **%s** | %d | %d | %d | %d | %d | %d | %d | %d |\n",
             results[i].filename, results[i].difficulty,
-            results[i].node_count, results[i].max_depth,
-            results[i].loop_count, results[i].if_count,
-            results[i].const_count, results[i].var_count,
-            results[i].switch_count);
+            results[i].total_node_count, results[i].local_node_count,
+            results[i].max_depth, results[i].loop_count,
+            results[i].if_count, results[i].const_count,
+            results[i].var_count, results[i].switch_count);
     }
 
     fclose(readme);
     free(results);
     free(diff_entries);
-    printf("Generated AST-backed README_c.md sorted by problem number in the current directory.\n");
+    printf("Generated AST-backed README_c.md with total and local node metrics.\n");
     return 0;
 }
